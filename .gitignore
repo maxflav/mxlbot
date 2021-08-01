@@ -1,0 +1,10 @@
+config.json
+cc_processed/
+cc_raw/
+processed_logs/
+rawlogs/
+saved_models/
+talk_processed/
+talk_raw/
+training_checkpoints/old/
+.DS_Store

@@ -1,0 +1,17 @@
+{
+    "irc": {
+        "server": "irc.snoonet.org",
+        "port": 6667,
+        "nick": "mxlbot",
+        "nickpass": "password",
+        "channels": [
+            "##MarkovDisaster",
+        ]
+    },
+    "rate_limit": {
+        "messages": 10,
+        "seconds": 30
+    },
+    "admin": ":maxle!maxle@user/maxle",
+    "command_key": "~"
+}
