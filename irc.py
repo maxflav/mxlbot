@@ -21,8 +21,6 @@ class IRC:
             self.handle_ping,
             self.handle_unregistered,
             self.handle_registered,
-            self.handle_nick_is_unregistered,
-            self.handle_email_is_unconfirmed,
         ]
 
     def stop(self):
@@ -48,8 +46,8 @@ class IRC:
         self.send("PRIVMSG " + channel + " :" + msg + "\n")
  
     def connect(self):
-        print("Connecting to: " + config['server'])
-        self.irc_socket.connect((config['server'], config['port']))
+        print("Connecting to: " + config['irc']['server'])
+        self.irc_socket.connect((config['irc']['server'], config['irc']['port']))
 
         self.listener_thread = threading.Thread(target=self.listen)
         self.listener_thread.start()
@@ -98,7 +96,7 @@ class IRC:
 
 
     def handle_registered(self, line):
-        if not ":Password accepted" in line:
+        if not (":Password accepted" in line or ":Your nickname is not registered" in line):
             return
 
         for channel in config['irc']['channels']:

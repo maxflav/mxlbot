@@ -53,4 +53,4 @@ for model_to_test in models:
             print(chat_generator.generate_reply(input_str))
     except Exception as e:
         print("** Model failed **")
-        print(e)
+        # print(e)
