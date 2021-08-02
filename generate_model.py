@@ -2,16 +2,23 @@
 
 ##### based on https://www.tensorflow.org/text/tutorials/text_generation
 
+import os
+# suppress warnings & info logs from tensorflow
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+import argparse
 import datetime
 from os import listdir, path
 import time
 import string
-import sys
 import random
 
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
+
+import logging
+tf.get_logger().setLevel(logging.ERROR)
 
 TRUNCATE_TEXT = False
 # TRUNCATE_TEXT = 10000
@@ -49,7 +56,7 @@ class ChatGenerator:
 
         result = tf.strings.join(result)
         result = result[0].numpy().decode('utf-8')
-        print("result from model: " + result)
+        # print("result from model: " + result)
 
         return result.split("\n")[-1]
 
@@ -98,8 +105,13 @@ def run_id():
     return datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 
-def initialize_generator(load_checkpoint=None):
-    vocab = list(sorted(set(string.printable)))
+def initialize_generator(load_checkpoint=None, vocab_file=None):
+    if vocab_file is None:
+        vocab = list(sorted(set(string.printable)))
+    else:
+        vocab = open(vocab_file, 'rb').read().decode('utf-8')
+        vocab = list(sorted(set(vocab)))
+
     vocab_size = len(vocab)
 
     ids_from_chars = preprocessing.StringLookup(vocabulary=vocab, mask_token=None)
@@ -258,8 +270,19 @@ class OneStep(tf.keras.Model):
     return predicted_chars, states
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('logs', help='path to logs files')
+    parser.add_argument('--epochs', type=int, help='how many epochs to run (default=1)', default=1)
+    parser.add_argument(
+        '--load',
+        help='path to checkpoint to load, or "latest" to load latest checkpoint. leave empty to start from scratch.',
+        default=None,
+    )
+
+    args = parser.parse_args()
+
     generate_model(
-        logs_folder=sys.argv[1],
-        load_checkpoint=sys.argv[2] if len(sys.argv) >= 3 else None,
-        epochs=int(sys.argv[3]) if len(sys.argv) >= 4 else 1,
+        logs_folder=args.logs,
+        load_checkpoint=args.load,
+        epochs=args.epochs,
     )

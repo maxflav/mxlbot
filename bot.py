@@ -9,9 +9,6 @@ from irc import *
 from generate_model import initialize_generator
 from conf import config
 
-import tensorflow as tf
-from tensorflow.keras.layers.experimental import preprocessing
-
 irc = IRC()
 irc.connect()
 
@@ -27,28 +24,12 @@ def message_handler(username, channel, message, full_user):
     elif botnick.upper() not in message.upper():
         return
 
-    reply = chat_generator.generate_reply(message + "\n")
-    reply = maybe_strip_username(reply)
+    input_str = ""
+    while len(input_str) < 100:
+        input_str += message + "\n"
+
+    reply = chat_generator.generate_reply(input_str)
     irc.send_to_channel(channel, username + ": " + reply)
-
-
-def maybe_strip_username(reply):
-    # TODO: strip usernames from training logs and remove this
-
-    reply_parts = reply.split(" ")
-    if len(reply_parts) == 1:
-        return reply
-
-    username = reply_parts[0]
-    if not username.startswith("<") and not username.endswith(">"):
-        return reply
-
-    if len(username) > 30:
-        return reply
-
-    reply_parts = reply_parts[1:]
-    return " ".join(reply_parts)
-
 
 
 def admin_commands(username, channel, message, full_user):

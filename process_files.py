@@ -37,8 +37,8 @@ def process_one(in_filename, out_filename):
         if len(parts) <= 2:
             continue
 
-        if username == '<gonzobot>' or (len(parts[2]) > 0 and parts[2][0]) == '.':
-            continue
+        # if username == '<gonzobot>' or (len(parts[2]) > 0 and parts[2][0]) == '.':
+        #     continue
 
         message_parts = parts[2:]  # strip the username
         message = " ".join(message_parts)
