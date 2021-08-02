@@ -66,11 +66,13 @@ class IRC:
                 return
 
             message = message.decode("UTF-8")
-            print(message)
 
             lines = message.split("\n")
             for line in lines:
                 line = line.strip()
+                if not line:
+                    continue
+                print(line)
                 for handler in self.handlers:
                     handler(line)
 

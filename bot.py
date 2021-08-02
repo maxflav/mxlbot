@@ -15,6 +15,7 @@ irc.connect()
 chat_generator = initialize_generator("latest")
 chat_generator.initialize()
 
+botnick = config['irc']['nick']
 
 def message_handler(username, channel, message, full_user):
     if message.upper().startswith(botnick.upper() + " "):
@@ -33,7 +34,7 @@ def message_handler(username, channel, message, full_user):
 
 
 def admin_commands(username, channel, message, full_user):
-    if full_user != admin:
+    if full_user != config['admin']:
         return
 
     if not message.startswith(config['command_key']):
