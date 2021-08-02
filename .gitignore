@@ -3,3 +3,6 @@ processed_logs/
 raw_logs/
 training_checkpoints/old/
 .DS_Store
+__pycache__/
+*.pyc
+*.pyo
