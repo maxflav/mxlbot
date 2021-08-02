@@ -5,6 +5,7 @@
 import datetime
 from os import listdir, path
 import time
+import string
 import sys
 import random
 
@@ -98,14 +99,8 @@ def run_id():
 
 
 def initialize_generator(load_checkpoint=None):
-    # TODO limit the vocab to just string.printable
-    # also TODO try using words instead of chars as the vocab
-    vocab_filename = "vocab.txt"
-    vocab = open(vocab_filename, 'rb').read().decode('utf-8')
-    vocab = list(sorted(set(vocab)))
+    vocab = list(sorted(set(string.printable)))
     vocab_size = len(vocab)
-
-    assert vocab_size == 654
 
     ids_from_chars = preprocessing.StringLookup(vocabulary=vocab, mask_token=None)
     chars_from_ids = preprocessing.StringLookup(vocabulary=vocab, invert=True, mask_token=None)
