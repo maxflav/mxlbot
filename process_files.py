@@ -3,13 +3,21 @@
 from os import listdir
 from os.path import isfile, join
 import sys
+import string
+
+replace_strings = {
+    "‘": "'",
+    "’": "'",
+    "“": '"',
+    "”": '"',
+    "…": "...",
+}
 
 def process_one(in_filename, out_filename):
     infile = open(in_filename, encoding='utf-8')
     outfile = open(out_filename, 'w', encoding='utf-8')
 
     while True:
-    # for line in infile:
         try:
             line = infile.readline()
             if not line:
@@ -26,22 +34,23 @@ def process_one(in_filename, out_filename):
         if username[0] != '<' or username[-1] != '>':
             continue
 
-        # username = username.strip('<>')
-        # if not parts[2]:
-        #     print('line', line)
-        #     print('parts', parts)
-        #     print('timestamp', timestamp)
-        #     print('username', username)
-
         if len(parts) <= 2:
-            # print(line)
             continue
 
         if username == '<gonzobot>' or (len(parts[2]) > 0 and parts[2][0]) == '.':
             continue
 
         message_parts = parts[2:]  # strip the username
-        outfile.write((' '.join(message_parts)) + '\n')
+        message = " ".join(message_parts)
+
+        for key, val in replace_strings.items():
+            message = message.replace(key, val)
+
+        if any([c not in string.printable for c in message]):
+            # skip lines with emojis or other unusual characters
+            continue
+
+        outfile.write(message + '\n')
 
 
 in_folder = sys.argv[1]
