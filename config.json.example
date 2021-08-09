@@ -12,6 +12,10 @@
         "messages": 10,
         "seconds": 30
     },
+    "respond_without_prompt": {
+        "messages_between": 20,
+        "seconds_since_last_response": 18000
+    },
     "admin": ":maxle!maxle@user/maxle",
     "command_key": "~"
 }

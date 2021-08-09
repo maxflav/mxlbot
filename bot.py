@@ -17,12 +17,13 @@ chat_generator.initialize()
 
 botnick = config['irc']['nick']
 
+count_since_response = 100
+last_respone_time = int(time.time())
+
 def message_handler(username, channel, message, full_user):
-    if message.upper().startswith(botnick.upper() + " "):
-        message = message[len(botnick + " "):]
-    elif message.upper().startswith(botnick.upper() + ": "):
-        message = message[len(botnick + ": "):]
-    elif botnick.upper() not in message.upper():
+    global count_since_response
+    if not should_respond(message):
+        count_since_response += 1
         return
 
     input_str = ""
@@ -30,8 +31,31 @@ def message_handler(username, channel, message, full_user):
         input_str += message + "\n"
 
     reply = chat_generator.generate_reply(input_str)
-    irc.send_to_channel(channel, username + ": " + reply)
+    if botnick.upper() in message.upper():
+        reply = username + ": " + reply
+    irc.send_to_channel(channel, reply)
 
+    count_since_response = 0
+    last_respone_time = int(time.time())
+
+
+def should_respond(message):
+    if botnick.upper() in message.upper():
+        return True
+
+    if 'respond_without_prompt' in config:
+        global count_since_response
+        if count_since_response < config['respond_without_prompt']['messages_between']:
+            # too few messages
+            return False
+
+        time_since_last_response = int(time.time()) - last_respone_time
+        if time_since_last_response < config['respond_without_prompt']['seconds_since_last_response']:
+            # last response too recent
+            return False
+        return True
+
+    return False
 
 def admin_commands(username, channel, message, full_user):
     if full_user != config['admin']:
