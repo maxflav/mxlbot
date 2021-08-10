@@ -34,28 +34,31 @@ class IRC:
         # check rate-limit
         now = int(time.time())
         if (
-            len(self.last_message_times) >= config['rate_limit']['messages'] - 1 and
-            now - self.last_message_times[0] < config['rate_limit']['seconds']
+            len(self.last_message_times) >= config.get('rate_limit', 'messages') - 1 and
+            now - self.last_message_times[0] < config.get('rate_limit', 'seconds')
         ):
             print("**** stopping because of rate-limit!")
             return
         self.last_message_times.append(now)
-        if len(self.last_message_times) > config['rate_limit']['messages']:
-            self.last_message_times = self.last_message_times[-1 * config['rate_limit']['messages']:]
+        if len(self.last_message_times) > config.get('rate_limit', 'messages'):
+            self.last_message_times = self.last_message_times[
+                -1 * config.get('rate_limit', 'messages')
+                :
+            ]
 
         self.send("PRIVMSG " + channel + " :" + msg + "\n")
  
     def connect(self):
-        print("Connecting to: " + config['irc']['server'])
-        self.irc_socket.connect((config['irc']['server'], config['irc']['port']))
+        print("Connecting to: " + config.get('irc', 'server'))
+        self.irc_socket.connect((config.get('irc', 'server'), config.get('irc', 'port')))
 
         self.listener_thread = threading.Thread(target=self.listen)
         self.listener_thread.start()
 
-        self.send("USER " + config['irc']['nick'] + " " + config['irc']['nick'] +" " + config['irc']['nick'] + " :python\n")
-        self.send("NICK " + config['irc']['nick'] + "\n")
-        self.send("NICKSERV IDENTIFY " + config['irc']['nickpass'] + "\n")
-        for channel in config['irc']['channels']:
+        self.send("USER " + config.get('irc', 'nick') + " " + config.get('irc', 'nick') +" " + config.get('irc', 'nick') + " :python\n")
+        self.send("NICK " + config.get('irc', 'nick') + "\n")
+        self.send("NICKSERV IDENTIFY " + config.get('irc', 'nickpass') + "\n")
+        for channel in config.get('irc', 'channels'):
             self.send("JOIN " + channel + "\n")
 
 
@@ -94,14 +97,14 @@ class IRC:
         if not ":This nickname is registered" in line:
             return
 
-        self.send("NICKSERV IDENTIFY " + config['irc']['nickpass'] + "\n")
+        self.send("NICKSERV IDENTIFY " + config.get('irc', 'nickpass') + "\n")
 
 
     def handle_registered(self, line):
         if not (":Password accepted" in line or ":Your nickname is not registered" in line):
             return
 
-        for channel in config['irc']['channels']:
+        for channel in config.get('irc', 'channels'):
             self.send("JOIN " + channel + "\n")
 
 

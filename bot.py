@@ -7,7 +7,7 @@ import traceback
 
 from irc import *
 from generate_model import initialize_generator
-from conf import config, load_config
+from conf import config
 
 irc = IRC()
 irc.connect()
@@ -15,7 +15,7 @@ irc.connect()
 chat_generator = initialize_generator("latest")
 chat_generator.initialize()
 
-botnick = config['irc']['nick']
+botnick = config.get('irc', 'nick')
 
 count_since_response = 100
 last_respone_time = int(time.time())
@@ -43,14 +43,14 @@ def should_respond(message):
     if botnick.upper() in message.upper():
         return True
 
-    if 'respond_without_prompt' in config:
+    if config.get('respond_without_prompt'):
         global count_since_response
-        if count_since_response < config['respond_without_prompt']['messages_between']:
+        if count_since_response < config.get('respond_without_prompt', 'messages_between'):
             # too few messages
             return False
 
         time_since_last_response = int(time.time()) - last_respone_time
-        if time_since_last_response < config['respond_without_prompt']['seconds_since_last_response']:
+        if time_since_last_response < config.get('respond_without_prompt', 'seconds_since_last_response'):
             # last response too recent
             return False
         return True
@@ -58,14 +58,14 @@ def should_respond(message):
     return False
 
 def admin_commands(username, channel, message, full_user):
-    if full_user != config['admin']:
+    if full_user != config.get('admin'):
         return
 
-    if not message.startswith(config['command_key']):
+    if not message.startswith(config.get('command_key')):
         return
 
     parts = message.split(" ")
-    command = parts[0][len(config['command_key']):]
+    command = parts[0][len(config.get('command_key')):]
     args = "".join(parts[1:])
 
     if command == "join":
@@ -105,8 +105,8 @@ def admin_commands(username, channel, message, full_user):
             irc.send_to_channel(channel, username + ": invalid temperature")
 
     elif command in ["reload_config", "config", "reloadconfig"]:
-        load_config()
-        irc.send_to_channel(channel, username + ": reloaded config.json. new command_key = " + config['command_key'])
+        config.load_from_file()
+        irc.send_to_channel(channel, username + ": reloaded config.json. new command_key = " + config.get('command_key'))
 
 
 irc.add_message_handler(message_handler)
