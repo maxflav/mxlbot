@@ -7,7 +7,7 @@ import traceback
 
 from irc import *
 from generate_model import initialize_generator
-from conf import config
+from conf import config, load_config
 
 irc = IRC()
 irc.connect()
@@ -75,7 +75,7 @@ def admin_commands(username, channel, message, full_user):
         to_leave = args if args else channel
         irc.send("PART " + to_leave + "\n")
 
-    elif command == "reload":
+    elif command in ["reload_model", "reloadmodel", "model"]:
         global chat_generator
         to_load = args if args else "latest"
         try:
@@ -89,9 +89,10 @@ def admin_commands(username, channel, message, full_user):
     elif command == "shutdown":
         irc.stop()
 
-    elif command == "temp":
+    elif command in ["temp", "temperature"]:
         if not args:
-            irc.send_to_channel(channel, username + ": current temperature is " + str(old_temperature))
+            irc.send_to_channel(channel, username + ": current temperature is " + str(chat_generator.temperature))
+            return
 
         try:
             temperature = float(args)
@@ -102,6 +103,10 @@ def admin_commands(username, channel, message, full_user):
         except Exception as e:
             print(e)
             irc.send_to_channel(channel, username + ": invalid temperature")
+
+    elif command in ["reload_config", "config", "reloadconfig"]:
+        load_config()
+        irc.send_to_channel(channel, username + ": reloaded config.json. new command_key = " + config['command_key'])
 
 
 irc.add_message_handler(message_handler)
