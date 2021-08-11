@@ -16,6 +16,7 @@
         "messages_between": 20,
         "seconds_since_last_response": 18000
     },
+    "message_randomly_time": 1800,
     "admin": ":maxle!maxle@user/maxle",
     "command_key": "~"
 }
