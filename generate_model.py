@@ -25,6 +25,15 @@ TRUNCATE_TEXT = False
 
 checkpoint_dir = 'training_checkpoints'
 
+# The embedding dimension
+DEFAULT_EMBEDDING_DIM = 100
+
+# Number of RNN units
+DEFAULT_RNN_UNITS = 2048
+
+# How many previous characters are considered when predicting next character
+DEFAULT_SEQ_LENGTH = 200
+
 
 class ChatGenerator:
     def __init__(self, model, vocab, chars_from_ids, ids_from_chars, loaded_checkpoint):
@@ -105,7 +114,11 @@ def run_id():
     return datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 
-def initialize_generator(load_checkpoint=None, vocab_file=None):
+def initialize_generator(load_checkpoint=None, vocab_file=None, embedding_dim=DEFAULT_EMBEDDING_DIM, rnn_units=DEFAULT_RNN_UNITS, seq_length=DEFAULT_SEQ_LENGTH):
+    print("embedding_dim =", embedding_dim)
+    print("rnn_units =", rnn_units)
+    print("seq_length =", seq_length)
+
     if vocab_file is None:
         vocab = list(sorted(set(string.printable)))
     else:
@@ -117,17 +130,11 @@ def initialize_generator(load_checkpoint=None, vocab_file=None):
     ids_from_chars = preprocessing.StringLookup(vocabulary=vocab, mask_token=None)
     chars_from_ids = preprocessing.StringLookup(vocabulary=vocab, invert=True, mask_token=None)
 
-    # The embedding dimension
-    embedding_dim = 256
-
-    # Number of RNN units
-    rnn_units = 1024
-
     model = MyModel(
         # Be sure the vocabulary size matches the `StringLookup` layers.
         vocab_size=vocab_size + 1,  # add one for [UNK]??
         embedding_dim=embedding_dim,
-        rnn_units=rnn_units
+        rnn_units=rnn_units,
     )
 
     loss = tf.losses.SparseCategoricalCrossentropy(from_logits=True)
@@ -159,8 +166,8 @@ def initialize_generator(load_checkpoint=None, vocab_file=None):
     )
 
 
-def generate_model(logs_folder, load_checkpoint=None, epochs=1):
-    chat_generator = initialize_generator(load_checkpoint)
+def generate_model(logs_folder, load_checkpoint=None, epochs=1, embedding_dim=DEFAULT_EMBEDDING_DIM, rnn_units=DEFAULT_RNN_UNITS, seq_length=DEFAULT_SEQ_LENGTH):
+    chat_generator = initialize_generator(load_checkpoint, embedding_dim=embedding_dim, rnn_units=rnn_units, seq_length=seq_length)
     model = chat_generator.model
     vocab = chat_generator.vocab
     ids_from_chars = chat_generator.ids_from_chars
@@ -171,6 +178,8 @@ def generate_model(logs_folder, load_checkpoint=None, epochs=1):
     input_files = [f for f in listdir(in_folder) if path.isfile(path.join(in_folder, f))]
     for filename in input_files:
         text += open(path.join(in_folder, filename), 'rb').read().decode('utf-8')
+        if TRUNCATE_TEXT:
+            break
 
     if TRUNCATE_TEXT:
         truncate_start = random.randrange(0, len(text) - TRUNCATE_TEXT)
@@ -179,7 +188,6 @@ def generate_model(logs_folder, load_checkpoint=None, epochs=1):
     all_ids = ids_from_chars(tf.strings.unicode_split(text, 'UTF-8'))
     ids_dataset = tf.data.Dataset.from_tensor_slices(all_ids)
 
-    seq_length = 100
     sequences = ids_dataset.batch(seq_length+1, drop_remainder=True)
 
     def split_input_target(sequence):
@@ -278,6 +286,9 @@ if __name__ == "__main__":
         help='path to checkpoint to load, or "latest" to load latest checkpoint. leave empty to start from scratch.',
         default=None,
     )
+    parser.add_argument('--embedding_dim', default=DEFAULT_EMBEDDING_DIM)
+    parser.add_argument('--rnn_units', default=DEFAULT_RNN_UNITS)
+    parser.add_argument('--seq_length', default=DEFAULT_SEQ_LENGTH)
 
     args = parser.parse_args()
 
@@ -285,4 +296,7 @@ if __name__ == "__main__":
         logs_folder=args.logs,
         load_checkpoint=args.load,
         epochs=args.epochs,
+        embedding_dim=int(args.embedding_dim),
+        rnn_units=int(args.rnn_units),
+        seq_length=int(args.seq_length),
     )

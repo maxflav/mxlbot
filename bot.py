@@ -13,6 +13,8 @@ from conf import config
 irc = IRC()
 irc.connect()
 
+HISTORY_TO_KEEP = 200
+
 chat_generator = initialize_generator("latest")
 chat_generator.initialize()
 
@@ -28,7 +30,7 @@ def message_handler(username, channel, message, full_user):
     if channel not in message_history:
         message_history[channel] = ""
     message_history[channel] += message + "\n"
-    message_history[channel] = message_history[channel][-100:]
+    message_history[channel] = message_history[channel][-1 * HISTORY_TO_KEEP:]
 
     global count_since_response
     if not should_respond(message):
@@ -137,7 +139,7 @@ def try_random_message():
             message = chat_generator.generate_reply(message_history[channel])
             irc.send_to_channel(channel, message)
             message_history[channel] += message + "\n"
-            message_history[channel] = message_history[channel][-100:]
+            message_history[channel] = message_history[channel][-1 * HISTORY_TO_KEEP:]
 
         count_since_response = 0
         last_response_time = int(time.time())
